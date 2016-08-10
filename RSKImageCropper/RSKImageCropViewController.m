@@ -552,6 +552,34 @@ static const CGFloat kLayoutImageScrollViewAnimationDuration = 0.25;
     return CGRectGetHeight(self.view.bounds) > CGRectGetWidth(self.view.bounds);
 }
 
+- (void)cropImage
+{
+  if ([self.delegate respondsToSelector:@selector(imageCropViewController:willCropImage:)]) {
+    [self.delegate imageCropViewController:self willCropImage:self.originalImage];
+  }
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    CGRect cropRect = self.cropRect;
+    CGFloat rotationAngle = self.rotationAngle;
+    
+    UIImage *croppedImage = [self croppedImage:self.originalImage cropMode:self.cropMode cropRect:cropRect rotationAngle:rotationAngle zoomScale:self.imageScrollView.zoomScale maskPath:self.maskPath applyMaskToCroppedImage:self.applyMaskToCroppedImage];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+      if ([self.delegate respondsToSelector:@selector(imageCropViewController:didCropImage:usingCropRect:rotationAngle:)]) {
+        [self.delegate imageCropViewController:self didCropImage:croppedImage usingCropRect:cropRect rotationAngle:rotationAngle];
+      } else if ([self.delegate respondsToSelector:@selector(imageCropViewController:didCropImage:usingCropRect:)]) {
+        [self.delegate imageCropViewController:self didCropImage:croppedImage usingCropRect:cropRect];
+      }
+    });
+  });
+}
+
+- (void)cancelCrop
+{
+  if ([self.delegate respondsToSelector:@selector(imageCropViewControllerDidCancelCrop:)]) {
+    [self.delegate imageCropViewControllerDidCancelCrop:self];
+  }
+}
+
 #pragma mark - Private
 
 - (void)reset:(BOOL)animated
@@ -918,34 +946,6 @@ static const CGFloat kLayoutImageScrollViewAnimationDuration = 0.25;
         
         // Step 11: return the cropped image affter processing.
         return croppedImage;
-    }
-}
-
-- (void)cropImage
-{
-    if ([self.delegate respondsToSelector:@selector(imageCropViewController:willCropImage:)]) {
-        [self.delegate imageCropViewController:self willCropImage:self.originalImage];
-    }
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        CGRect cropRect = self.cropRect;
-        CGFloat rotationAngle = self.rotationAngle;
-        
-        UIImage *croppedImage = [self croppedImage:self.originalImage cropMode:self.cropMode cropRect:cropRect rotationAngle:rotationAngle zoomScale:self.imageScrollView.zoomScale maskPath:self.maskPath applyMaskToCroppedImage:self.applyMaskToCroppedImage];
-        
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if ([self.delegate respondsToSelector:@selector(imageCropViewController:didCropImage:usingCropRect:rotationAngle:)]) {
-                [self.delegate imageCropViewController:self didCropImage:croppedImage usingCropRect:cropRect rotationAngle:rotationAngle];
-            } else if ([self.delegate respondsToSelector:@selector(imageCropViewController:didCropImage:usingCropRect:)]) {
-                [self.delegate imageCropViewController:self didCropImage:croppedImage usingCropRect:cropRect];
-            }
-        });
-    });
-}
-
-- (void)cancelCrop
-{
-    if ([self.delegate respondsToSelector:@selector(imageCropViewControllerDidCancelCrop:)]) {
-        [self.delegate imageCropViewControllerDidCancelCrop:self];
     }
 }
 

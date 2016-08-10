@@ -192,6 +192,15 @@ typedef NS_ENUM(NSUInteger, RSKImageCropMode) {
  */
 - (BOOL)isPortraitInterfaceOrientation;
 
+/**
+ Run cropping function.
+ */
+- (void)cropImage;
+
+/**
+ Cancel cropping function.
+ */
+- (void)cancelCrop;
 /// -------------------------------------
 /// @name Accessing the Layout Attributes
 /// -------------------------------------
